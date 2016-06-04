@@ -177,7 +177,7 @@ namespace VSCodeDebugger
 
 			public CompletionData GetExpressionCompletionData(int frameIndex, string exp)
 			{
-				throw new NotImplementedException();
+				return new CompletionData();
 			}
 
 			class VSCodeObjectSource : IObjectValueSource
@@ -283,12 +283,12 @@ namespace VSCodeDebugger
 
 			public ObjectValue GetThisReference(int frameIndex, EvaluationOptions options)
 			{
-				throw new NotImplementedException();
+				return GetAllLocals(frameIndex, options).FirstOrDefault(l => l.Name == "this");
 			}
 
 			public ValidationResult ValidateExpression(int frameIndex, string expression, EvaluationOptions options)
 			{
-				throw new NotImplementedException();
+				return new ValidationResult(true, null);
 			}
 		}
 
