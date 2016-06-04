@@ -12,11 +12,12 @@ namespace VSCodeDebugger
 		{
 			var filesBasePath = Path.Combine(Path.GetDirectoryName(typeof(VSCodeDebuggerSession).Assembly.Location), "CoreClrAdaptor");
 			var fileInfo = new Mono.Unix.UnixFileInfo(Path.Combine(filesBasePath, "OpenDebugAD7"));
-			if ((fileInfo.FileAccessPermissions | Mono.Unix.FileAccessPermissions.OtherExecute) == Mono.Unix.FileAccessPermissions.OtherExecute)
+			var allExecutePermissions = (Mono.Unix.FileAccessPermissions.UserExecute | Mono.Unix.FileAccessPermissions.OtherExecute | Mono.Unix.FileAccessPermissions.GroupExecute);
+			if ((fileInfo.FileAccessPermissions & allExecutePermissions) == allExecutePermissions)
 				return;//We already set
 			foreach (var file in Directory.GetFiles(filesBasePath, "*", SearchOption.AllDirectories)) {
-				fileInfo = fileInfo = new Mono.Unix.UnixFileInfo(file);
-				fileInfo.FileAccessPermissions = fileInfo.FileAccessPermissions | Mono.Unix.FileAccessPermissions.OtherExecute;
+				fileInfo = new Mono.Unix.UnixFileInfo(file);
+				fileInfo.FileAccessPermissions = fileInfo.FileAccessPermissions | allExecutePermissions;
 			}
 		}
 	}
