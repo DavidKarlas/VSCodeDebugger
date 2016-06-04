@@ -1,0 +1,7 @@
+<AddinProject appVersion="6.0">
+	<Project platforms="Mac">
+		<AddinFile>VSCodeDebugger/bin/Debug/VSCodeDebugger.dll</AddinFile>
+		<BuildFile>VSCodeDebugger.sln</BuildFile>
+		<BuildConfiguration>Debug</BuildConfiguration>
+	</Project>
+</AddinProject>

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionModel>
+	<Runtime>
+		
+	</Runtime>
+	<Extension path="/MonoDevelop/Debugging/DebuggerEngines">
+		<DebuggerEngine
+			insertbefore="Mono.Debugger.Soft"
+			id="VSCodeDebugger"
+			name="VSCode Protocol Debugger"
+			features="Breakpoints, Pause, Stepping, DebugFile, ConditionalBreakpoints, Tracepoints, Catchpoints, Disassembly, Attaching"
+			type="VSCodeDebugger.VSCodeDebuggerEngine" />
+	</Extension>
+</ExtensionModel>
