@@ -72,7 +72,7 @@ namespace VSCodeDebugger
 			return threads;
 		}
 
-		Dictionary<Breakpoint, BreakEventInfo> breakpoints = new Dictionary<Breakpoint, BreakEventInfo>();
+		Dictionary<BreakEvent, BreakEventInfo> breakpoints = new Dictionary<BreakEvent, BreakEventInfo>();
 
 		protected override BreakEventInfo OnInsertBreakEvent(BreakEvent breakEvent)
 		{
@@ -81,8 +81,22 @@ namespace VSCodeDebugger
 				breakpoints.Add((Breakpoint)breakEvent, breakEventInfo);
 				UpdateBreakpoints();
 				return breakEventInfo;
+			} else if (breakEvent is Catchpoint) {
+				var catchpoint = (Catchpoint)breakEvent;
+				var breakEventInfo = new BreakEventInfo();
+				breakpoints.Add(breakEvent, breakEventInfo);
+				UpdateExceptions();
+				return breakEventInfo;
 			}
 			throw new NotImplementedException(breakEvent.GetType().FullName);
+		}
+
+		void UpdateExceptions()
+		{
+			var hasCustomExceptions = breakpoints.Select(b => b.Key).OfType<Catchpoint>().Any();
+			protocolClient.SendRequestAsync(new SetExceptionBreakpointsRequest(new SetExceptionBreakpointsArguments {
+				filters = Capabilities.exceptionBreakpointFilters.Where(f => hasCustomExceptions || (f.Default ?? false)).Select(f => f.Filter).ToArray()
+			})).Wait();
 		}
 
 		protected override void OnNextInstruction()
@@ -149,7 +163,7 @@ namespace VSCodeDebugger
 						variablesReference = variablesGroup.variablesReference
 					})).Result;
 					foreach (var variable in varibles.variables) {
-						results.Add(ObjectValue.CreatePrimitive(null, new ObjectPath(variable.name), "unknown", new EvaluationResult(variable.value), ObjectValueFlags.None));
+						results.Add(VsCodeVariableToObjectValue(vsCodeDebuggerSession, variable.name, variable.value, variable.variablesReference));
 					}
 				}
 				return results.ToArray();
@@ -157,7 +171,7 @@ namespace VSCodeDebugger
 
 			public ExceptionInfo GetException(int frameIndex, EvaluationOptions options)
 			{
-				throw new NotImplementedException();
+				return new ExceptionInfo(GetAllLocals(frameIndex, options).Where(o => o.Name == "$exception").FirstOrDefault());
 			}
 
 			public CompletionData GetExpressionCompletionData(int frameIndex, string exp)
@@ -293,11 +307,14 @@ namespace VSCodeDebugger
 					switch ((string)obj.body.reason) {
 						case "breakpoint":
 							args = new TargetEventArgs(TargetEventType.TargetHitBreakpoint);
-							args.BreakEvent = breakpoints.Single(pair => pair.Key.FileName == (string)obj.body.source.path &&
-																 pair.Key.Line == (int)obj.body.line).Key;
+							args.BreakEvent = breakpoints.Select(b => b.Key).OfType<Breakpoint>().Single(b => b.FileName == (string)obj.body.source.path && b.Line == (int)obj.body.line);
 							break;
 						case "step":
+						case "pause":
 							args = new TargetEventArgs(TargetEventType.TargetStopped);
+							break;
+						case "exception":
+							args = new TargetEventArgs(TargetEventType.ExceptionThrown);
 							break;
 						default:
 							throw new NotImplementedException((string)obj.body.reason);
@@ -308,6 +325,14 @@ namespace VSCodeDebugger
 					args.Backtrace = GetThreadBacktrace((long)obj.body.threadId);
 
 					OnTargetEvent(args);
+					break;
+				case "terminated":
+					OnTargetEvent(new TargetEventArgs(TargetEventType.TargetExited));
+					break;
+				case "exited":
+					OnTargetEvent(new TargetEventArgs(TargetEventType.TargetExited) {
+						ExitCode = (int)obj.body.exitCode
+					});
 					break;
 			}
 		}
@@ -360,8 +385,9 @@ namespace VSCodeDebugger
 				columnsStartAt1 = true,
 				pathFormat = "path"
 			});
-			protocolClient.SendRequestAsync(initRequest).Wait();
+			Capabilities = protocolClient.SendRequestAsync(initRequest).Result;
 		}
+		Capabilities Capabilities;
 
 		protected override void OnRun(DebuggerStartInfo startInfo)
 		{

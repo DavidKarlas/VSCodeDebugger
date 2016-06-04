@@ -310,6 +310,24 @@ namespace VSCodeDebug
 		}
 	}
 
+	/** SetExceptionBreakpoints request; value of command field is "setExceptionBreakpoints".
+		Enable that the debuggee stops on exceptions with a StoppedEvent (event type 'exception').
+	*/
+	public class SetExceptionBreakpointsRequest : Request<SetExceptionBreakpointsArguments, object>
+	{
+		public SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments args)
+			: base("setExceptionBreakpoints", args)
+		{
+		}
+	}
+
+	/** Arguments for "setExceptionBreakpoints" request. */
+	public class SetExceptionBreakpointsArguments
+	{
+		/** Names of enabled exception breakpoints. */
+		public string[] filters { get; set; }
+	}
+
 	/** Properties of a breakpoint passed to the setBreakpoints request.
 	*/
 	public class SourceBreakpoint
@@ -676,7 +694,21 @@ namespace VSCodeDebug
 		public bool supportsFunctionBreakpoints;
 		public bool supportsConditionalBreakpoints;
 		public bool supportsEvaluateForHovers;
-		public dynamic[] exceptionBreakpointFilters;
+		public ExceptionBreakpointsFilter[] exceptionBreakpointFilters;
+	}
+
+	/** An ExceptionBreakpointsFilter is shown in the UI as an option for configuring how exceptions are dealt with. */
+	public class ExceptionBreakpointsFilter
+	{
+		/** The internal ID of the filter. This value is passed to the setExceptionBreakpoints request. */
+		[JsonProperty("filter")]
+		public string Filter { get; set; }
+		/** The name of the filter. This will be shown in the UI. */
+		[JsonProperty("label")]
+		public string Label { get; set; }
+		/** Initial value of the filter. If not specified a value 'false' is assumed. */
+		[JsonProperty("default", NullValueHandling = NullValueHandling.Ignore)]
+		public bool? Default { get; set; }
 	}
 
 	public class ErrorResponseBody : ResponseBody

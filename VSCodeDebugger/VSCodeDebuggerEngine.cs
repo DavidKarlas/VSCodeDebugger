@@ -38,7 +38,6 @@ namespace VSCodeDebugger
 		public override DebuggerStartInfo CreateDebuggerStartInfo(ExecutionCommand c)
 		{
 			var cmd = (DotNetExecutionCommand)c;
-			var runtime = (MonoTargetRuntime)cmd.TargetRuntime;
 			var dsi = new DebuggerStartInfo {
 				Command = cmd.Command,
 				Arguments = cmd.Arguments,
