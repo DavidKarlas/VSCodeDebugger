@@ -115,8 +115,9 @@ namespace VSCodeDebugger
 
 		protected override void OnRemoveBreakEvent(BreakEventInfo eventInfo)
 		{
-			//breakpoints.Remove(breakpoints.Single(b => b.Value == eventInfo).Key);
-			//UpdateBreakpoints(eventInfo.BreakEvent);
+			breakpoints.Remove(breakpoints.Single(b => b.Value == eventInfo).Key);
+			UpdateBreakpoints();
+			UpdateExceptions();
 		}
 
 		Process debugAgentProcess;
@@ -307,7 +308,12 @@ namespace VSCodeDebugger
 					switch ((string)obj.body.reason) {
 						case "breakpoint":
 							args = new TargetEventArgs(TargetEventType.TargetHitBreakpoint);
-							args.BreakEvent = breakpoints.Select(b => b.Key).OfType<Breakpoint>().Single(b => b.FileName == (string)obj.body.source.path && b.Line == (int)obj.body.line);
+							var bp = breakpoints.Select(b => b.Key).OfType<Breakpoint>().FirstOrDefault(b => b.FileName == (string)obj.body.source.path && b.Line == (int)obj.body.line);
+							if (bp == null) {
+								OnContinue();
+								return;
+							}
+							args.BreakEvent = bp;
 							break;
 						case "step":
 						case "pause":
@@ -442,7 +448,9 @@ namespace VSCodeDebugger
 
 		protected override void OnUpdateBreakEvent(BreakEventInfo eventInfo)
 		{
-			throw new NotImplementedException();
+			breakpoints[breakpoints.Single(b => b.Value == eventInfo).Key] = eventInfo;
+			UpdateBreakpoints();
+			UpdateExceptions();
 		}
 	}
 }

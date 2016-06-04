@@ -33,6 +33,7 @@
     <Compile Include="VSCodeDebuggerEngine.cs" />
     <Compile Include="VSCodeDebuggerSession.cs" />
     <Compile Include="Protocol.cs" />
+    <Compile Include="StartupHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Manifest.addin.xml" />
@@ -49,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mono.Posix" />
   </ItemGroup>
   <ItemGroup>
     <AddinFile Include="CoreClrAdaptor\1033\clrdbg.resources.dll">
