@@ -5,7 +5,7 @@ using Mono.Addins.Description;
 [assembly: Addin (
 	"VSCodeDebugger",
 	Namespace = "VSCodeDebugger",
-	Version = "1.0"
+	Version = "1.1"
 )]
 
 [assembly: AddinName ("VSCodeDebugger")]

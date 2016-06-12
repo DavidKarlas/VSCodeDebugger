@@ -301,7 +301,7 @@ namespace VSCodeDebug
 		public string context { get; set; }
 	}
 
-	public class SetBreakpointsRequest : Request<SetBreakpointsRequestArguments, object>
+	public class SetBreakpointsRequest : Request<SetBreakpointsRequestArguments, SetBreakpointsResponseBody>
 	{
 		public SetBreakpointsRequest(SetBreakpointsRequestArguments args)
 		: base("setBreakpoints", args)
@@ -801,9 +801,14 @@ namespace VSCodeDebug
 
 	public class SetBreakpointsResponseBody : ResponseBody
 	{
-		public BreakpointStatus[] breakpoints { get; }
+		public BreakpointStatus[] breakpoints { get; set; }
 
-		public SetBreakpointsResponseBody(List<BreakpointStatus> bpts = null)
+		public SetBreakpointsResponseBody()
+		: this(null)
+		{
+		}
+
+		public SetBreakpointsResponseBody(List<BreakpointStatus> bpts)
 		{
 			if (bpts == null)
 				breakpoints = new BreakpointStatus[0];

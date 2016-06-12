@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Mono.Debugging.Client;
 using MonoDevelop.Core;
 using MonoDevelop.Core.Assemblies;
@@ -18,7 +19,7 @@ namespace VSCodeDebugger
 		public override bool CanDebugCommand(ExecutionCommand cmd)
 		{
 			var dotnetCmd = cmd as DotNetExecutionCommand;
-			if (dotnetCmd == null)
+			if (dotnetCmd == null || !File.Exists(dotnetCmd.Command))
 				return false;
 			var fxId = Runtime.SystemAssemblyService.GetTargetFrameworkForAssembly(null, dotnetCmd.Command);
 

@@ -33,12 +33,14 @@ namespace VSCodeDebugger
 
 		protected override void OnEnableBreakEvent(BreakEventInfo eventInfo, bool enable)
 		{
-			throw new NotImplementedException();
+			eventInfo.BreakEvent.Enabled = enable;
+			UpdateExceptions();
+			UpdateBreakpoints();
 		}
 
 		protected override void OnExit()
 		{
-			//protocolClient.SendRequestAsync();
+			protocolClient.SendRequestAsync(new DisconnectRequest()).Wait();
 		}
 
 		protected override void OnFinish()
@@ -48,7 +50,7 @@ namespace VSCodeDebugger
 			})).Wait();
 		}
 
-		ProcessInfo[] processInfo = new ProcessInfo[] { new ProcessInfo(1, "debugee") };
+		ProcessInfo[] processInfo = { new ProcessInfo(1, "debugee") };
 		protected override ProcessInfo[] OnGetProcesses()
 		{
 			return processInfo;
@@ -96,7 +98,7 @@ namespace VSCodeDebugger
 			var hasCustomExceptions = breakpoints.Select(b => b.Key).OfType<Catchpoint>().Any();
 			protocolClient.SendRequestAsync(new SetExceptionBreakpointsRequest(new SetExceptionBreakpointsArguments {
 				filters = Capabilities.exceptionBreakpointFilters.Where(f => hasCustomExceptions || (f.Default ?? false)).Select(f => f.Filter).ToArray()
-			})).Wait();
+			}));
 		}
 
 		protected override void OnNextInstruction()
@@ -354,16 +356,24 @@ namespace VSCodeDebugger
 
 		void UpdateBreakpoints()
 		{
-			var bks = breakpoints.Select(b => b.Key).OfType<Mono.Debugging.Client.Breakpoint>().GroupBy(b => b.FileName);
+			var bks = breakpoints.Select(b => b.Key).OfType<Breakpoint>().GroupBy(b => b.FileName).ToArray();
 			foreach (var sourceFile in bks) {
 				protocolClient.SendRequestAsync(new SetBreakpointsRequest(new SetBreakpointsRequestArguments {
 					Source = new Source(sourceFile.Key),
-					Breakpoints = sourceFile.Select(b => new SourceBreakpoint() {
+					Breakpoints = sourceFile.Select(b => new SourceBreakpoint {
 						Line = b.Line,
 						Column = b.Column,
 						Condition = b.ConditionExpression
 					}).ToList()
-				}));
+				})).ContinueWith(t => {
+					if (t.IsFaulted)
+						return;
+					for (int i = 0; i < t.Result.breakpoints.Length; i++) {
+						breakpoints[sourceFile.ElementAt(i)].SetStatus(t.Result.breakpoints[i].verified ? BreakEventStatus.Bound : BreakEventStatus.NotBound, "");
+						if (t.Result.breakpoints[i].line != sourceFile.ElementAt(i).OriginalLine)
+							breakpoints[sourceFile.ElementAt(i)].AdjustBreakpointLocation(t.Result.breakpoints[i].line, 1);
+					}
+				});
 			}
 		}
 

@@ -200,9 +200,6 @@
     <AddinFile Include="CoreClrAdaptor\mscorlib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AddinFile>
-    <AddinFile Include="CoreClrAdaptor\mscorlib.ni.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AddinFile>
     <AddinFile Include="CoreClrAdaptor\Newtonsoft.Json.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AddinFile>
