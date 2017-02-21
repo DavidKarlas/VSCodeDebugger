@@ -1,2 +1,1 @@
-# VSCodeDebugger
-Xamarin Studio/MonoDevelop debugger AddIn for VSCode debugging protocol, currently with only CoreClr debugger adaptor.
+This repository is now obsolete since this is now part of MonoDevelop repository at https://github.com/mono/monodevelop/tree/vNext/main/src/addins/MonoDevelop.Debugger.VSCodeDebugProtocol/MonoDevelop.Debugger.VsCodeDebugProtocol 
